@@ -77,7 +77,7 @@ def find_best_window(forecast: dict, target_date: datetime | None = None) -> dic
     if target_date is None:
         target_date = datetime.now().astimezone()
 
-    best_i = 0
+    best_i = None
     best_speed = 0
     for i, speed in enumerate(hourly["wind_speed_10m"]):
         if speed is not None and speed > best_speed:
@@ -85,6 +85,16 @@ def find_best_window(forecast: dict, target_date: datetime | None = None) -> dic
             if dt.date() == target_date.date() and 9 <= dt.hour <= 18:
                 best_speed = speed
                 best_i = i
+
+    if best_i is None:
+        # No daytime wind found — default to 1pm (typical thermal peak)
+        for i, t in enumerate(hourly["time"]):
+            dt = datetime.fromisoformat(t)
+            if dt.date() == target_date.date() and dt.hour == 13:
+                best_i = i
+                break
+        if best_i is None:
+            best_i = 0
 
     dt = datetime.fromisoformat(hourly["time"][best_i])
     return {
