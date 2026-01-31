@@ -1,5 +1,8 @@
 import httpx
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
+
+# Pacific Time (standard offset; DST not handled but sufficient for date comparison)
+PT = timezone(timedelta(hours=-8))
 
 # Mission Bay, San Diego
 COASTAL_LAT, COASTAL_LON = 32.77, -117.23
@@ -38,11 +41,11 @@ def get_hourly_at(forecast: dict, target_hour: int | None = None, target_date: d
     times = hourly["time"]
 
     if target_hour is None:
-        now = datetime.now().astimezone()
+        now = datetime.now(PT)
         target_hour = now.hour
 
     if target_date is None:
-        target_date = datetime.now().astimezone()
+        target_date = datetime.now(PT)
 
     for i, t in enumerate(times):
         dt = datetime.fromisoformat(t)
@@ -75,7 +78,7 @@ def find_best_window(forecast: dict, target_date: datetime | None = None) -> dic
     """Find the best wind window in the forecast for a given date."""
     hourly = forecast["hourly"]
     if target_date is None:
-        target_date = datetime.now().astimezone()
+        target_date = datetime.now(PT)
 
     best_i = None
     best_speed = 0
