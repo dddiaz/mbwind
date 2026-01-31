@@ -17,7 +17,7 @@ def _fetch_forecast(lat: float, lon: float) -> dict:
         "wind_speed_unit": "kn",
         "temperature_unit": "fahrenheit",
         "timezone": "America/Los_Angeles",
-        "forecast_days": 1,
+        "forecast_days": 2,
     }
     resp = httpx.get(BASE_URL, params=params, timeout=10)
     resp.raise_for_status()
@@ -32,8 +32,8 @@ def fetch_inland_forecast() -> dict:
     return _fetch_forecast(INLAND_LAT, INLAND_LON)
 
 
-def get_hourly_at(forecast: dict, target_hour: int | None = None) -> dict:
-    """Extract data for a specific hour (0-23) or the current hour."""
+def get_hourly_at(forecast: dict, target_hour: int | None = None, target_date: datetime | None = None) -> dict:
+    """Extract data for a specific hour (0-23) and date, or the current hour."""
     hourly = forecast["hourly"]
     times = hourly["time"]
 
@@ -41,10 +41,12 @@ def get_hourly_at(forecast: dict, target_hour: int | None = None) -> dict:
         now = datetime.now().astimezone()
         target_hour = now.hour
 
-    # Find the index matching target_hour
+    if target_date is None:
+        target_date = datetime.now().astimezone()
+
     for i, t in enumerate(times):
         dt = datetime.fromisoformat(t)
-        if dt.hour == target_hour:
+        if dt.hour == target_hour and dt.date() == target_date.date():
             return {
                 "time": t,
                 "hour": dt.hour,
@@ -69,15 +71,18 @@ def get_hourly_at(forecast: dict, target_hour: int | None = None) -> dict:
     }
 
 
-def find_best_window(forecast: dict) -> dict:
-    """Find the best wind window in the forecast."""
+def find_best_window(forecast: dict, target_date: datetime | None = None) -> dict:
+    """Find the best wind window in the forecast for a given date."""
     hourly = forecast["hourly"]
+    if target_date is None:
+        target_date = datetime.now().astimezone()
+
     best_i = 0
     best_speed = 0
     for i, speed in enumerate(hourly["wind_speed_10m"]):
         if speed is not None and speed > best_speed:
             dt = datetime.fromisoformat(hourly["time"][i])
-            if 9 <= dt.hour <= 18:  # daytime only
+            if dt.date() == target_date.date() and 9 <= dt.hour <= 18:
                 best_speed = speed
                 best_i = i
 

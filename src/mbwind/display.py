@@ -16,8 +16,9 @@ def render_report(
     thermal: dict,
     tide_str: str,
     best_window_hour: int,
-    laser_tip: str,
+    tip: str,
     breakdown: dict,
+    sport: str = "laser",
     observed_wind: dict | None = None,
     marine_forecast: str | None = None,
 ) -> None:
@@ -57,7 +58,8 @@ def render_report(
     )
 
     lines.append("")
-    lines.append(f"[italic]Laser tip: {laser_tip}[/italic]")
+    sport_label = sport.capitalize()
+    lines.append(f"[italic]{sport_label} tip: {tip}[/italic]")
 
     if marine_forecast:
         short = marine_forecast[:200] + "..." if len(marine_forecast) > 200 else marine_forecast

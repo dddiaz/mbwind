@@ -6,7 +6,7 @@ from mbwind.score import (
     score_time_of_day,
     compute_confidence,
     direction_name,
-    laser_tip,
+    sport_tip,
 )
 
 
@@ -21,9 +21,15 @@ def test_score_wind_speed():
     assert score_wind_speed(0) == 0
     assert score_wind_speed(2) == 0
     assert score_wind_speed(5) == 10
-    assert score_wind_speed(10) == 30  # ideal
+    assert score_wind_speed(10) == 30  # ideal laser
     assert score_wind_speed(18) == 18
     assert score_wind_speed(30) == 5
+
+
+def test_score_wind_speed_wingfoil():
+    assert score_wind_speed(5, "wingfoil") == 5  # too light
+    assert score_wind_speed(18, "wingfoil") == 30  # ideal
+    assert score_wind_speed(10, "wingfoil") == 12  # marginal
 
 
 def test_score_direction():
@@ -77,6 +83,25 @@ def test_compute_confidence_nogo():
     assert result["recommendation"] == "NO-GO"
 
 
+def test_compute_confidence_wingfoil_go():
+    result = compute_confidence(
+        wind_kts=18,
+        wind_dir=270,
+        gust_kts=22,
+        thermal_delta_f=20,
+        marine_layer_suppression=0.0,
+        hour=13,
+        sport="wingfoil",
+    )
+    assert result["score"] >= 65
+    assert result["recommendation"] == "GO"
+
+
 def test_laser_tip():
-    assert "Light air" in laser_tip(3, 4)
-    assert "hiking" in laser_tip(12, 15).lower()
+    assert "Light air" in sport_tip(3, 4)
+    assert "hiking" in sport_tip(12, 15).lower()
+
+
+def test_wingfoil_tip():
+    assert "light" in sport_tip(5, 6, "wingfoil").lower()
+    assert "sweet spot" in sport_tip(18, 22, "wingfoil").lower()
