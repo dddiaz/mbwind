@@ -6,7 +6,7 @@ readme = "README.md"
 authors = [
     { name = "Daniel Diaz", email = "daniel.delvin.diaz@gmail.com" }
 ]
-requires-python = ">=3.13"
+requires-python = ">=3.10"
 dependencies = [
     "httpx",
     "click",
